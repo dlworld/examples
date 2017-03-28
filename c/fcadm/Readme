@@ -1,0 +1,458 @@
+##################################################################################################################################
+#                                                          Boot Accelerate                                                       #
+##################################################################################################################################
+
+
+
+##################################################################################################################################
+# fcadm test
+##################################################################################################################################
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         279        3269           3         227        3276
+Swap:          4094         502        3592
+
+$ cat /proc/meminfo | grep Mlock
+Mlocked:            5344 kB
+
+
+$ ./fcadm lock /opt/CentOS-7-x86_64-Everything-1511.iso -a ":3G"
+
+$ ./fcadm show /opt/CentOS-7-x86_64-Everything-1511.iso
+fixup address area : 
+[00000] 0x0000000000000000:0x0000000010000000
+file cache map 
+[0000000000] **************** **************** **************** **************** **************** **************** **************** **************** 
+............
+
+[00C0600000]                                                                                                                                         
+............
+
+total cache num 787968, size 0xC0600000.
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         278         193           3        3303        3266
+Swap:          4094         502        3592
+
+
+$ cat /proc/meminfo | grep Mlock
+Mlocked:         3151072 kB
+
+$ dd if=/opt/CentOS-7-x86_64-Everything-1511.iso of=/dev/null bs=1M count=3072
+记录了3072+0 的读入
+记录了3072+0 的写出
+3221225472字节(3.2 GB)已复制，0.408468 秒，7.9 GB/秒
+
+
+$ ./fcadm unlock /opt/CentOS-7-x86_64-Everything-1511.iso -a ":3G"
+fixup address area : 
+[00000] 0x0000000000000000:0x00000000C0000000
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         278        3275           3         220        3279
+Swap:          4094         502        3592
+
+
+$ cat /proc/meminfo | grep Mlock
+Mlocked:            5344 kB
+
+$ ./fcadm show /opt/CentOS-7-x86_64-Everything-1511.iso
+fixup address area : 
+[00000] 0x0000000000000000:0x0000000010000000
+file cache map 
+[0000000000]                                                                                                                                         
+............
+
+total cache num 0, size 0x00000000.
+
+
+$ dd if=/opt/CentOS-7-x86_64-Everything-1511.iso of=/dev/null bs=1M count=3072
+记录了3072+0 的读入
+记录了3072+0 的写出
+3221225472字节(3.2 GB)已复制，16.4056 秒，196 MB/秒
+
+
+
+
+##################################################################################################################################
+# tmpfs test
+##################################################################################################################################
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         519        2078          11        1176        2941
+Swap:          4094           0        4094
+
+$ mkdir /opt/tmpfs
+$ mount -t tmpfs tmpfs /opt/tmpfs
+
+df -h | grep /opt/tmpfs
+tmpfs           1.9G     0  1.9G    0% /opt/tmpfs
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         521        2077          11        1176        2940
+Swap:          4094           0        4094
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+dd: 写入"/opt/tmpfs/test.img" 出错: 设备上没有空间
+记录了1888+0 的读入
+记录了1887+0 的写出
+1979351040字节(2.0 GB)已复制，18.9863 秒，104 MB/秒
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         521         182        1898        3072        1052
+Swap:          4094           0        4094
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+$ dd if=/opt/tmpfs/test.img of=/dev/null bs=1M count=4096
+记录了1887+1 的读入
+记录了1887+1 的写出
+1979351040字节(2.0 GB)已复制，0.326796 秒，6.1 GB/秒
+
+$ dd if=/dev/zero of=/opt/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，26.0618 秒，165 MB/秒
+
+$ dd if=/opt/test/CentOS-7-x86_64-Everything-1511.iso of=/opt/test.img bs=1M count=4096
+记录了401+1 的读入
+记录了401+1 的写出
+420741120字节(421 MB)已复制，4.56058 秒，92.3 MB/秒
+
+$ dd if=/opt/test.img of=/dev/null bs=1M count=4096
+记录了1698+0 的读入
+记录了1698+0 的写出
+1780482048字节(1.8 GB)已复制，8.84219 秒，201 MB/秒
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         522         113        1898        3139        1060
+Swap:          4094           0        4094
+
+$ dd if=/opt/tmpfs/test.img of=/dev/null bs=1M count=4096
+记录了1887+1 的读入
+记录了1887+1 的写出
+1979351040字节(2.0 GB)已复制，0.264913 秒，7.5 GB/秒
+
+
+
+##################################################################################################################################
+# tmpfs with swap test
+
+$ mount -t tmpfs -o size=5G tmpfs /opt/tmpfs
+
+$ df -h | grep /opt/tmpfs
+tmpfs           5.0G     0  5.0G    0% /opt/tmpfs
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，5.03958 秒，852 MB/秒
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，2.47495 秒，1.7 GB/秒
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，2.23346 秒，1.9 GB/秒
+
+free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         224         118        3288        3432          79
+Swap:          4094        1132        2962
+
+$ rm /opt/tmpfs/test.img
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         220        3406           6         147        3367
+Swap:          4094         319        3775
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，2.28856 秒，1.9 GB/秒
+
+$ dd if=/dev/zero of=/opt/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，21.8989 秒，196 MB/秒
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         253         110        3210        3410         100
+Swap:          4094        1209        2885
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，2.29994 秒，1.9 GB/秒
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+$ dd if=/opt/test.img of=/opt/test1.img bs=1M count=4096
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         237         132        3230        3404         109
+Swap:          4094        1189        2905
+
+$ dd if=/opt/test/win7-test.img of=/opt/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，91.3051 秒，47.0 MB/秒
+
+$ dd if=/opt/test/win7-test.img of=/opt/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，101.585 秒，42.3 MB/秒
+
+$ dd if=/opt/test/win7-test.img of=/opt/test.img bs=1M count=8192
+记录了8192+0 的读入
+记录了8192+0 的写出
+8589934592字节(8.6 GB)已复制，217.491 秒，39.5 MB/秒
+
+$ cat /proc/meminfo | grep Mlock
+Mlocked:           12872 kB
+
+
+$ ./fcadm show /opt/tmpfs/test.img
+
+$ ./fcadm lock /opt/test/win7-test.img -a ":3G"
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         313         128         586        3333        2615
+Swap:          4094        3827         267
+
+$ dd if=/opt/tmpfs/test.img of=/dev/null bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，12.1623 秒，353 MB/秒
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         299         127        3188        3348          97
+Swap:          4094        1221        2873
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，2.53446 秒，1.7 GB/秒
+
+
+
+$ dd if=/opt/tmpfs/test.img of=/dev/null bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，21.1565 秒，203 MB/秒
+
+$ dd if=/dev/zero of=/dev/null bs=1M count=4096
+记录了4096+0 的读入
+记录了4096+0 的写出
+4294967296字节(4.3 GB)已复制，0.221522 秒，19.4 GB/秒
+
+$ dd if=/dev/zero of=/dev/null bs=1M count=2048
+记录了2048+0 的读入
+记录了2048+0 的写出
+2147483648字节(2.1 GB)已复制，0.111643 秒，19.2 GB/秒
+
+
+$ rm /opt/tmpfs/test.img
+
+$ dd if=/dev/zero of=/opt/tmpfs/test.img bs=1M count=2048
+记录了2048+0 的读入
+记录了2048+0 的写出
+2147483648字节(2.1 GB)已复制，0.678306 秒，3.2 GB/秒
+
+$ dd if=/opt/tmpfs/test.img of=/dev/null bs=1M count=2048
+记录了2048+0 的读入
+记录了2048+0 的写出
+2147483648字节(2.1 GB)已复制，0.348624 秒，6.2 GB/秒
+
+
+$ ./fcadm lock /opt/CentOS-7-x86_64-Everything-1511.iso -a ":2500M"
+
+$ dd if=/opt/CentOS-7-x86_64-Everything-1511.iso of=/dev/null bs=1M count=2500
+记录了2500+0 的读入
+记录了2500+0 的写出
+2621440000字节(2.6 GB)已复制，0.325122 秒，8.1 GB/秒
+
+
+##################################################################################################################################
+# qemu test
+##################################################################################################################################
+
+$ qemu-img info /opt/test/win7-test.img
+image: /opt/test/win7-test.img
+file format: qcow2
+virtual size: 40G (42949672960 bytes)
+disk size: 23G
+cluster_size: 65536
+Format specific information:
+    compat: 1.1
+    lazy refcounts: false
+
+
+
+##################################################################################################################################
+# Normal Boot
+
+$ echo 3 > /proc/sys/vm/drop_caches
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         306        3323           3         145        3283
+Swap:          4094         361        3733
+
+$ qemu-system-x86_64 -machine pc-i440fx-1.7,accel=kvm,usb=off -drive file=/opt/test/win7-test.img -m 1024 -monitor stdio
+
+# 38 second
+# 31 second
+# 31 second
+# 31 second
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         348        2403           4        1023        3168
+Swap:          4094         343        3751
+
+$ ./fcadm show /opt/test/win7-test.img
+fixup address area : 
+[00000] 0x0000000000000000:0x0000000010000000
+file cache map 
+[0000000000] ****             ****************                  *                **************** **************** **************** **************** 
+[0000080000] **************** **************** **************** **************** **************** **************** **************** **************** 
+ .......... 
+
+.................................................
+
+[0396D80000]                                                                                                                                         
+ .......... 
+
+[05C6600000]                                                                     ****************          *******                          ******** 
+[05C6680000]                                           ********                          ********                          ********                  
+[05C6700000]         ********                          ********                          ********                                                    
+[05C6780000]                                     **************                                                                                      
+[05C6800000]                                   **************** **************** 
+total cache num 224249, size 0x36BF9000.
+
+
+##################################################################################################################################
+
+$ echo 3 > /proc/sys/vm/drop_caches
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         350        3302           6         121        3249
+Swap:          4094         336        3758
+
+$ mount -t tmpfs -o size=3G tmpfs /opt/tmpfs
+
+$ qemu-img create -f qcow2 -b /opt/test/win7-test.img /opt/tmpfs/win7-top.img
+Formatting '/opt/tmpfs/win7-top.img', fmt=qcow2 size=42949672960 backing_file='/opt/test/win7-test.img' encryption=off cluster_size=65536 lazy_refcounts=off
+
+$ qemu-img info /opt/tmpfs/win7-top.img
+image: /opt/tmpfs/win7-top.img
+file format: qcow2
+virtual size: 40G (42949672960 bytes)
+disk size: 196K
+cluster_size: 65536
+backing file: /opt/test/win7-test.img
+Format specific information:
+    compat: 1.1
+    lazy refcounts: false
+
+$ ll -h /opt/tmpfs/win7-top.img
+-rw-r--r-- 1 root root 193K 2月   6 15:42 /opt/tmpfs/win7-top.img
+
+$ qemu-system-x86_64 -machine pc-i440fx-1.7,accel=kvm,usb=off -drive file=/opt/tmpfs/win7-top.img,copy-on-read=on -m 1024 -monitor stdio
+
+# Use tmpfs
+# 37 second, 377M
+# 30 second, 396M
+# 30 second, 399M
+
+# No tmpfs
+# 38 second, 396M
+# 31 second, 411M
+# 31 second, 417M
+
+$ df -h | grep /opt/tmpfs
+tmpfs           3.0G  411M  2.6G   14% /opt/tmpfs
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         354        1931         416        1488        2765
+Swap:          4094         335        3759
+
+
+$ ./fcadm show /opt/tmpfs/win7-top.img
+fixup address area : 
+[00000] 0x0000000000000000:0x0000000010000000
+file cache map 
+[0000000000] **************** **************** **************** *                **************** **************** **************** **************** 
+[0000080000] **************** **************** **************** **************** **************** **************** **************** **************** 
+ .......... 
+
+[0019A00000] **************** 
+total cache num 104961, size 0x19A01000.
+
+
+##################################################################################################################################
+
+$ mv /opt/tmpfs/win7-top.img /opt/
+$ umount /opt/tmpfs/
+
+$ echo 3 > /proc/sys/vm/drop_caches
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         354        3296           7         124        3244
+Swap:          4094         333        3761
+
+$ ll -h /opt/win7-top.img 
+-rw-r--r-- 1 root root 388M 2月   6 16:06 /opt/win7-top.img
+
+$ ./fcadm lock /opt/win7-top.img -a ":387M"
+
+$ free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         360        2852           7         562        2824
+Swap:          4094         332        3762
+
+$ cat /proc/meminfo | grep Mlock
+Mlocked:          409176 kB
+
+
+$ qemu-system-x86_64 -machine pc-i440fx-1.7,accel=kvm,usb=off -drive file=/opt/win7-top.img,copy-on-read=on -m 1024 -monitor stdio
+
+
+# 31 second, 393M
+# 30 second, 398M
+# 30 second, 405M
+
+free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3775         361        2495           8         918        2776
+Swap:          4094         332        3762
+
+
+
+
+
+
+
