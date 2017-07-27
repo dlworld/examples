@@ -1,0 +1,57 @@
+#!/usr/bin/env stap
+#
+##probe qemu.system.x86_64.simpletrace.usb_xhci_reset {}
+#
+
+probe qemu.kvm.raw_aio_submit = process("/usr/libexec/qemu-kvm").function("raw_aio_submit")
+{
+}
+
+probe qemu.kvm.paio_submit = process("/usr/libexec/qemu-kvm").function("paio_submit")
+{
+}
+
+probe qemu.kvm.laio_submit = process("/usr/libexec/qemu-kvm").function("laio_submit")
+{
+  acb = $cb;
+opaque = $opaque;
+sector_num = $sector_num;
+nb_sectors = $nb_sectors;
+  type = $type;
+}
+
+
+#probe qemu.kvm.simpletrace.bdrv_aio_readv {}
+#probe qemu.kvm.simpletrace.bdrv_aio_writev {}
+probe qemu.kvm.simpletrace.paio_submit {}
+#probe qemu.kvm.simpletrace.bdrv_aio_flush {}
+probe qemu.kvm.laio_submit {
+printf("%8b%8b%4b%4b%8b%8b%8b%8b%8b", 1293, gettimeofday_ns(), 24 + 8 + 8 + 8 + 8 + 8, pid(), acb, opaque, sector_num, nb_sectors, type)
+#printf("laio_submit secotor:%ld %ld type:%ld\n", sector_num, nb_sectors, type)
+}
+#probe qemu.kvm.raw_aio_submit {
+# printf("raw_aio_submit pid:%ld\t", pid())
+#}
+#probe qemu.kvm.paio_submit {
+# printf("paio_submit\n")
+#}
+
+probe qemu.kvm.simpletrace.qcow2_writev_start_req {}
+probe qemu.kvm.simpletrace.qcow2_writev_done_req {}
+probe qemu.kvm.simpletrace.qcow2_writev_start_part {}
+probe qemu.kvm.simpletrace.qcow2_writev_done_part {}
+probe qemu.kvm.simpletrace.qcow2_writev_data {}
+probe qemu.kvm.simpletrace.qcow2_alloc_clusters_offset {}
+probe qemu.kvm.simpletrace.qcow2_handle_copied {}
+probe qemu.kvm.simpletrace.qcow2_handle_alloc {}
+probe qemu.kvm.simpletrace.qcow2_do_alloc_clusters_offset {}
+probe qemu.kvm.simpletrace.qcow2_cluster_alloc_phys {}
+probe qemu.kvm.simpletrace.qcow2_cluster_link_l2 {}
+probe qemu.kvm.simpletrace.qcow2_l2_allocate {}
+probe qemu.kvm.simpletrace.qcow2_l2_allocate_write_l2 {}
+probe qemu.kvm.simpletrace.qcow2_l2_allocate_write_l1 {}
+probe qemu.kvm.simpletrace.qcow2_l2_allocate_done {}
+probe qemu.kvm.simpletrace.qcow2_cache_get {}
+probe qemu.kvm.simpletrace.qcow2_cache_get_read  {}
+probe qemu.kvm.simpletrace.qcow2_cache_flush {}
+probe qemu.kvm.simpletrace.qcow2_cache_entry_flush {}
