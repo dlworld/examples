@@ -1,0 +1,5 @@
+
+# as -o andn.o andn.S
+# ld -o andn andn.o
+# ./andn
+
