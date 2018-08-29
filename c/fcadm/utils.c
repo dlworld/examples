@@ -1,14 +1,4 @@
-/**
- * @par Copyright 2017 Wuhan OS-Easy Cloud Computing Co. Ltd.
- * @file utils.c
- * @brief fcadm utils function.
- * @author LastRitter
- * @version 1.0.0
- * @date 2017-01-19
- */
 #include "fcadm.h"
-
-
 
 /**
  * @brief fc_str_to_size, parse size value frome string.
@@ -308,5 +298,4 @@ uint32_t fc_crc32_calc(const uint8_t* buf, uint32_t len)
 	
 	return crc;
 }
-
 
