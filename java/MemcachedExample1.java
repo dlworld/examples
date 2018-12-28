@@ -8,11 +8,13 @@ import java.util.concurrent.TimeUnit;
  * */
 import java.util.concurrent.Future;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.AddrUtil;
+import net.spy.memcached.BinaryConnectionFactory;
 import java.net.*;
  
 class MemcachedTask implements Runnable {
     private String name;
-    private String host;
+    private String hosts;
     private int port ;
     private String key;
     private MemcachedClient mcc;
@@ -24,7 +26,7 @@ class MemcachedTask implements Runnable {
           try{
              // 本地连接 Memcached 服务
              this.mcc = new MemcachedClient(new BinaryConnectionFactory(),
-                     AddrUtil.getAddress(hosts));
+                     AddrUtil.getAddresses(hosts));
              System.out.println("Connection to server " + hosts + " sucessful.");
           }catch(Exception ex){
              System.out.println( ex.getMessage() );
@@ -49,16 +51,13 @@ class MemcachedTask implements Runnable {
       return value;
    }
 
-   private void set(String[] args) {
+   private void set(String value) {
       try{
          // 存储数据
-         Future fo = mcc.set("runoob", 900, "Free Education");
+         Future fo = mcc.set(key, 900, value);
 
          // 查看存储状态
          System.out.println("set status:" + fo.get());
-
-         // 输出值
-         System.out.println("runoob value in cache - " + mcc.get("runoob"));
       }catch(Exception ex){
          System.out.println( ex.getMessage() );
       }
@@ -86,9 +85,6 @@ class MemcachedTask implements Runnable {
 
          // 打印状态
          System.out.println("add status:" + fo.get());
-
-         // 输出
-         System.out.println("codingground value in cache - " + mcc.get("codingground"));
       }catch(Exception ex){
          System.out.println(ex.getMessage());
       }
@@ -96,6 +92,8 @@ class MemcachedTask implements Runnable {
 
     public void run() {
         Object value;
+
+        //set("test");
 
         for(int i = 0; i < 10; i++) {
             value = get();
@@ -180,7 +178,7 @@ class CustomThreadPool
     }
 }
 
-public class MemcachedExample {
+public class MemcachedExample1 {
     public static void main(String[] args)
     {
         CustomThreadPool customThreadPool = new CustomThreadPool(16);
