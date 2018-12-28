@@ -91,14 +91,17 @@ class MemcachedTask implements Runnable {
    }
 
     public void run() {
-        Object value;
+        String value = null, old_value = null;
 
         //set("test");
 
         for(int i = 0; i < 10; i++) {
-            value = get();
+            value = get().toString();
 
-            System.out.println(System.nanoTime() + " " + hosts +  " Get: " + value);
+            if (!value.equals(old_value)) {
+                System.out.println(System.nanoTime() + " " + hosts +  " Get: " + value);
+            }
+
             try {
                 Thread.sleep(100);
             } catch (Exception e) {
@@ -181,10 +184,16 @@ class CustomThreadPool
 public class MemcachedExample1 {
     public static void main(String[] args)
     {
-        CustomThreadPool customThreadPool = new CustomThreadPool(16);
         String hosts1 = "10.58.151.35:12048 10.58.151.35:12049 10.58.151.35:12050 10.58.151.33:12048 10.58.151.33:12049 10.58.151.33:12050 10.58.151.32:12048 10.58.151.32:12049 10.58.151.32:12050 10.58.151.31:12048 10.58.151.31:12049 10.58.151.31:12050 10.58.151.30:12048 10.58.151.30:12049 10.58.151.30:12050 10.58.151.23:12048 10.58.151.23:12049 10.58.151.23:12050 10.58.151.21:12048 10.58.151.21:12049 10.58.151.21:12050 10.58.151.20:12048 10.58.151.20:12049 10.58.151.20:12050";
 
-        MemcachedTask task1 = new MemcachedTask(hosts1, "cl:176248672");
+        CustomThreadPool customThreadPool = new CustomThreadPool(16);
+
+        String value = "cl:176248672"
+        if (args.length == 1) {
+            value = args[0]
+        }
+
+        MemcachedTask task1 = new MemcachedTask(hosts1, value);
 
         customThreadPool.execute(task1);
     }
