@@ -91,19 +91,19 @@ class MemcachedTask implements Runnable {
    }
 
     public void run() {
-        String value = null, old_value = null;
+        Object value = null, old_value = null;
 
         //set("test");
 
         for(int i = 0; i < 10; i++) {
-            value = get().toString();
+            value = get();
 
-            if (!value.equals(old_value)) {
-                System.out.println(System.nanoTime() + " " + hosts +  " Get: " + value);
+            if (value && !value.equals(old_value)) {
+                System.out.println(System.nanoTime() + " Get: " + value);
             }
 
             try {
-                Thread.sleep(100);
+                Thread.sleep(1000 * 10);
             } catch (Exception e) {
                 e.printStackTrace();
             }
