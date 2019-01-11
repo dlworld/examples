@@ -2,6 +2,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.Date;
 
 /*
  * http://www.runoob.com/memcached/java-memcached.html
@@ -16,12 +17,14 @@ class MemcachedTask implements Runnable {
     private String name;
     private String hosts;
     private int port ;
-    private String key;
+    private int interval;
+    private String default_key;
     private MemcachedClient mcc;
 
-    public MemcachedTask(String hosts, String key) {
+    public MemcachedTask(String hosts, String key, int interval) {
         this.hosts = hosts;
-        this.key  = key;
+        this.default_key  = key;
+        this.interval = interval;
 
           try{
              // 本地连接 Memcached 服务
@@ -33,7 +36,7 @@ class MemcachedTask implements Runnable {
           }
     }
 
-   private Object get() {
+   public Object get(String key) {
        Object value = null;
       try{
          // 添加数据
@@ -43,15 +46,16 @@ class MemcachedTask implements Runnable {
          //System.out.println("set status:" + fo.get());
 
          // 使用 get 方法获取数据
-         value = mcc.get(key).toString();
+         value = mcc.get(key);
       }catch(Exception ex) {
          System.out.println(ex.getMessage());
+         ex.printStackTrace();
       }
 
       return value;
    }
 
-   private void set(String value) {
+   public void set(String key, String value) {
       try{
          // 存储数据
          Future fo = mcc.set(key, 900, value);
@@ -60,6 +64,7 @@ class MemcachedTask implements Runnable {
          System.out.println("set status:" + fo.get());
       }catch(Exception ex){
          System.out.println( ex.getMessage() );
+         ex.printStackTrace();
       }
    }
 
@@ -93,17 +98,14 @@ class MemcachedTask implements Runnable {
     public void run() {
         Object value = null, old_value = null;
 
-        //set("test");
+        for(int i = 0; i < 100000000; i++) {
+            value = get(default_key);
 
-        for(int i = 0; i < 10; i++) {
-            value = get();
-
-            if (value && !value.equals(old_value)) {
-                System.out.println(System.nanoTime() + " Get: " + value);
-            }
+                Date date = new Date();
+                System.out.println(date.toString() + " Get: " + default_key + " Value: " + value);
 
             try {
-                Thread.sleep(1000 * 10);
+                Thread.sleep(60 * 1000 * (5 + interval * i));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -184,18 +186,29 @@ class CustomThreadPool
 public class MemcachedExample1 {
     public static void main(String[] args)
     {
-        String hosts1 = "10.58.151.35:12048 10.58.151.35:12049 10.58.151.35:12050 10.58.151.33:12048 10.58.151.33:12049 10.58.151.33:12050 10.58.151.32:12048 10.58.151.32:12049 10.58.151.32:12050 10.58.151.31:12048 10.58.151.31:12049 10.58.151.31:12050 10.58.151.30:12048 10.58.151.30:12049 10.58.151.30:12050 10.58.151.23:12048 10.58.151.23:12049 10.58.151.23:12050 10.58.151.21:12048 10.58.151.21:12049 10.58.151.21:12050 10.58.151.20:12048 10.58.151.20:12049 10.58.151.20:12050";
+//        String hosts1 = "10.58.151.35:12048 10.58.151.35:12049 10.58.151.35:12050 10.58.151.33:12048 10.58.151.33:12049 10.58.151.33:12050 10.58.151.32:12048 10.58.151.32:12049 10.58.151.32:12050 10.58.151.31:12048 10.58.151.31:12049 10.58.151.31:12050 10.58.151.30:12048 10.58.151.30:12049 10.58.151.30:12050 10.58.151.23:12048 10.58.151.23:12049 10.58.151.23:12050 10.58.151.21:12048 10.58.151.21:12049 10.58.151.21:12050 10.58.151.20:12048 10.58.151.20:12049 10.58.151.20:12050";
+	//String hosts2 = "127.0.0.1:11211";
+	      String hosts1 = "192.168.122.231:11211";
+	      String hosts2 = "192.168.122.231:12048 192.168.122.231:12049";
 
         CustomThreadPool customThreadPool = new CustomThreadPool(16);
 
-        String value = "cl:176248672"
+        String default_key = null;
         if (args.length == 1) {
-            value = args[0]
+            default_key = args[0];
         }
 
-        MemcachedTask task1 = new MemcachedTask(hosts1, value);
+        default_key = "task1";
+        MemcachedTask task1 = new MemcachedTask(hosts1, default_key, 0);
+        task1.set(default_key, "test1");
+
+        default_key = "task2";
+        MemcachedTask task2 = new MemcachedTask(hosts2, default_key, 30);
+      	task2.get("notexists");
+      	task2.set(default_key, "test2");
 
         customThreadPool.execute(task1);
+        customThreadPool.execute(task2);
     }
 }
 
