@@ -6,8 +6,8 @@ typedef unsigned long long ticks;
 static __inline__ ticks getticks(void)
 {
      unsigned a, d;
-     asm("cpuid");
-     asm volatile("rdtsc" : "=a" (a), "=d" (d));
+//     asm("cpuid");
+     asm volatile("rdtscp" : "=a" (a), "=d" (d));
 
      return (((ticks)a) | (((ticks)d) << 32));
 }
