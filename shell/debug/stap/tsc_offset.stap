@@ -1,0 +1,22 @@
+probe begin
+{
+        printf("probing begin\n");
+}
+
+#probe kernel.function("numa_cpu_node@arch/x86/mm/numa.c").call {}
+
+probe module("kvm_intel").function("vmx_compute_tsc_offset")
+{
+        printf("%ld, %ld\n", $vcpu->vcpu_id, $target_tsc);
+}
+
+probe module("kvm_intel").function("vmx_compute_tsc_offset").return
+{
+        printf("%ld\n", $return);
+}
+
+probe end
+{
+        printf("exit\n")
+}
+

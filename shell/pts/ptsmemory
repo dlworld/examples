@@ -1,0 +1,39 @@
+#!/usr/bin/expect
+set timeout 600
+set results [lindex $argv 0]
+set description [lindex $argv 1]
+spawn phoronix-test-suite batch-setup
+
+expect "Save test results when in batch mode (Y/n): "
+send "Y\r"
+expect "Open the web browser automatically when in batch mode (y/N): "
+send "N\r"
+
+expect "Auto upload the results to OpenBenchmarking.org (Y/n): "
+send "Y\r"
+
+expect "Prompt for test identifier (Y/n): "
+send "Y\r"
+
+
+expect "Prompt for test description (Y/n): "
+send "Y\r"
+
+expect "Prompt for saved results file-name (Y/n): "
+send "Y\r"
+
+expect "Run all test options (Y/n): "
+send "Y\r"
+
+spawn phoronix-test-suite batch-benchmark ramspeed stream mbw
+
+expect "Enter a name to save these results under: "
+send "$results\r"
+
+expect "Enter a unique name to describe this test run / configuration: "
+send "$description\r"
+
+expect "New Description: "
+send "$description\r"
+
+interact

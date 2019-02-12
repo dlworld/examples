@@ -1,0 +1,5 @@
+probe kernel.function("kvm_clock_read")
+{
+ printf ("clock read\n")
+}
+
