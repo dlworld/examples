@@ -9,13 +9,19 @@ else
 fi
     
 # always disable defrag
-echo never > ${thp_dir}/defrag
-echo 0 > ${thp_dir}/khugepaged/defrag
 
 if [ "$op"x == "disable"x ]
 then
+    echo "disable thp..."
     echo never > ${thp_dir}/enabled
+    echo never > ${thp_dir}/defrag
+    echo 0 > ${thp_dir}/khugepaged/defrag
 else
+    echo "enable thp..."
     echo always > ${thp_dir}/enabled
+    echo always > ${thp_dir}/defrag
+    echo 1 > ${thp_dir}/khugepaged/defrag
 fi
+
+echo "done"
 

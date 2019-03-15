@@ -36,6 +36,9 @@ then
                 --guestvmlinux=./vmlinux-${kernel} \
                 record -a -p $pid
         cp perf.data.guest perf.data.guest-`date +%m-%d-%T`
+elif [ $op == "stat" ]
+then
+     timeout -s 2 10 perf stat -e 'kvm:*' -p $pid
 elif [ $op == "report" ]
 then
         perf kvm --guestkallsyms=./kallsyms-${kernel} \

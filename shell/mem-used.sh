@@ -1,6 +1,7 @@
 #/bin/bash
 RSS=0
 VM=0
+echo "PID   VM  RSS"
 for PROC in `ls /proc/|grep "^[0-9]"`
 do
   if [ -f /proc/$PROC/statm ]; then
